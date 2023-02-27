@@ -124,11 +124,15 @@ which adds the `CategoryTheory` rule set,
 and allows `aesop` look through semireducible definitions when calling `intros`. -/
 macro (name := aesop_cat) "aesop_cat" c:Aesop.tactic_clause*: tactic =>
   `(tactic|
-    aesop $c* (options := { introsTransparency? := some .default, warnOnNonterminal := false }) 
+    aesop $c* (options := { introsTransparency? := some .default, warnOnNonterminal := false })
     (rule_sets [CategoryTheory]))
 
 -- We turn on `ext` inside `aesop_cat`.
 attribute [aesop safe tactic (rule_sets [CategoryTheory])] Std.Tactic.Ext.extCore'
+
+-- TODO move to builtin Aesop rule set.
+@[aesop norm forward (rule_sets [CategoryTheory])]
+theorem pEmpty_false : PEmpty → False := fun.
 
 /-- The typeclass `Category C` describes morphisms associated to objects of type `C`.
 The universe levels of the objects and morphisms are unconstrained, and will often need to be
