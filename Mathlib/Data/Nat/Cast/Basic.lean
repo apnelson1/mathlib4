@@ -82,8 +82,7 @@ section OrderedSemiring
 
 variable [OrderedSemiring α]
 
--- porting note: missing mono attribute
--- @[mono]
+@[mono]
 theorem mono_cast : Monotone (Nat.cast : ℕ → α) :=
   monotone_nat_of_le_succ fun n ↦ by
     rw [Nat.cast_succ]; exact le_add_of_nonneg_right zero_le_one
@@ -115,7 +114,7 @@ theorem StrictMono_cast : StrictMono (Nat.cast : ℕ → α) :=
 #align nat.strict_mono_cast Nat.StrictMono_cast
 
 /-- `Nat.cast : ℕ → α` as an `OrderEmbedding` -/
-@[simps (config := { fullyApplied := false })]
+@[simps! (config := { fullyApplied := false })]
 def castOrderEmbedding : ℕ ↪o α :=
   OrderEmbedding.ofStrictMono Nat.cast Nat.StrictMono_cast
 #align nat.cast_order_embedding Nat.castOrderEmbedding
