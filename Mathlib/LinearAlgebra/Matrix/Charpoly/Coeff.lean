@@ -51,7 +51,7 @@ variable {M : Matrix n n R}
 
 theorem charmatrix_apply_natDegree [Nontrivial R] (i j : n) :
     (charmatrix M i j).natDegree = ite (i = j) 1 0 := by
-  by_cases i = j <;> simp [h, ← degree_eq_iff_natDegree_eq_of_pos (Nat.succ_pos 0)]
+  by_cases h: i = j <;> simp [h, ← degree_eq_iff_natDegree_eq_of_pos (Nat.succ_pos 0)]
 #align charmatrix_apply_nat_degree charmatrix_apply_natDegree
 
 theorem charmatrix_apply_natDegree_le (i j : n) : (charmatrix M i j).natDegree ≤ ite (i = j) 1 0 :=
@@ -97,7 +97,7 @@ theorem det_of_card_zero (h : Fintype.card n = 0) (M : Matrix n n R) : M.det = 1
 
 theorem charpoly_degree_eq_dim [Nontrivial R] (M : Matrix n n R) :
     M.charpoly.degree = Fintype.card n := by
-  by_cases Fintype.card n = 0
+  by_cases h : Fintype.card n = 0
   · rw [h]
     unfold charpoly
     rw [det_of_card_zero]
@@ -133,7 +133,7 @@ theorem charpoly_natDegree_eq_dim [Nontrivial R] (M : Matrix n n R) :
 
 theorem charpoly_monic (M : Matrix n n R) : M.charpoly.Monic := by
   nontriviality R -- porting note: was simply `nontriviality`
-  by_cases Fintype.card n = 0
+  by_cases h : Fintype.card n = 0
   · rw [charpoly, det_of_card_zero h]
     apply monic_one
   have mon : (∏ i : n, (X - C (M i i))).Monic := by
