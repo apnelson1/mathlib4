@@ -162,3 +162,32 @@ theorem count_mono_left {n : ℕ} (hpq : ∀ k, p k → q k) : count p n ≤ cou
 end Count
 
 end Nat
+
+open Nat
+
+namespace OrderEmbedding
+
+variable (f : ℕ ↪o ℕ) [DecidablePred (· ∈ Set.range f)]
+
+@[simp] lemma count_apply (n : ℕ) : count (· ∈ Set.range f) (f n) = n :=
+  calc count (· ∈ Set.range f) (f n) = card (filter (· ∈ Set.range f) (range (f n))) :=
+    count_eq_card_filter_range _ _
+  _ = card ((range n).map f.toEmbedding) := congr_arg _ <| Finset.ext fun m => by
+  { simp only [mem_filter, Set.mem_range, mem_range, mem_map]
+    exact ⟨fun ⟨h₁, k, hk⟩ => ⟨k, f.lt_iff_lt.1 <| hk.symm ▸ h₁, hk⟩,
+      fun ⟨k, h₁, h₂⟩ => ⟨h₂ ▸ f.lt_iff_lt.2 h₁, k, h₂⟩⟩ }
+  _ = n := by simp
+
+/-- For an order embedding `f : ℕ ↪o ℕ`, the functions `Nat.count (· ∈ Set.range f)` and `f` form a
+Galois insertion. -/
+def gi_nat_count : GaloisInsertion (Nat.count (· ∈ Set.range f)) f := by
+  refine .monotoneIntro f.monotone (count_monotone _) (fun n => not_lt.1 fun hn => ?_) f.count_apply
+  have : count (· ∈ Set.range f) (f (count (· ∈ Set.range f) n)) < count _ n :=
+    count_strict_mono (Set.mem_range_self _) hn
+  rw [count_apply] at this
+  exact this.false
+
+lemma gc_nat_count : GaloisConnection (Nat.count (· ∈ Set.range f)) f := f.gi_nat_count.gc
+
+lemma count_mem_range_le_iff {m n : ℕ} : count (· ∈ Set.range f) m ≤ n ↔ m ≤ f n := f.gc_nat_count _ _
+

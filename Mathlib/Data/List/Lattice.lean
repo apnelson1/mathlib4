@@ -68,6 +68,12 @@ theorem Disjoint.symm (d : Disjoint l₁ l₂) : Disjoint l₂ l₁ := fun _ i�
 #align list.disjoint_of_disjoint_append_right_right List.disjoint_of_disjoint_append_right_right
 #align list.disjoint_take_drop List.disjoint_take_dropₓ
 
+lemma Disjoint.mem_left_iff (h : Disjoint l₁ l₂) : a ∈ l₁ ↔ a ∈ (l₁ ++ l₂) ∧ a ∉ l₂ := by
+  simpa [or_and_right] using @h _
+
+lemma Disjoint.mem_right_iff (h : Disjoint l₁ l₂) : a ∈ l₂ ↔ a ∈ (l₁ ++ l₂) ∧ a ∉ l₁ := by
+  rw [h.symm.mem_left_iff, mem_append, mem_append, or_comm]
+
 end Disjoint
 
 variable [DecidableEq α]

@@ -44,6 +44,14 @@ theorem nodup_cons {a : α} {l : List α} : Nodup (a :: l) ↔ a ∉ l ∧ Nodup
   simp only [Nodup, pairwise_cons, forall_mem_ne]
 #align list.nodup_cons List.nodup_cons
 
+theorem Nodup.mem_take_iff {l : List α} (h : Nodup l) {a : α} {n : ℕ} :
+    a ∈ l.take n ↔ a ∈ l ∧ a ∉ l.drop n := by
+  simpa only [take_append_drop] using (disjoint_take_drop h le_rfl).mem_left_iff
+
+theorem Nodup.mem_drop_iff {l : List α} (h : Nodup l) {a : α} {n : ℕ} :
+    a ∈ l.drop n ↔ a ∈ l ∧ a ∉ l.take n := by
+  simpa only [take_append_drop] using (disjoint_take_drop h le_rfl).mem_right_iff
+
 protected theorem Pairwise.nodup {l : List α} {r : α → α → Prop} [IsIrrefl α r] (h : Pairwise r l) :
     Nodup l :=
   h.imp ne_of_irrefl

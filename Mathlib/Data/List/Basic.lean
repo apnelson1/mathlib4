@@ -2052,6 +2052,11 @@ theorem get_take' (L : List α) {j i} :
     get (L.take j) i = get L ⟨i.1, lt_of_lt_of_le i.2 (by simp [le_refl])⟩ := by
   let ⟨i, hi⟩ := i; simp at hi; rw [get_take L _ hi.1]
 
+theorem mem_take_iff_get {L : List α} {n : ℕ} {x : α} :
+    x ∈ L.take n ↔ ∃ k : Fin L.length, k < n ∧ L.get k = x := by
+  simp only [mem_iff_get, get_take', Fin.exists_iff, length_take, lt_min_iff]
+  exact exists_congr fun k => ⟨fun ⟨h₁, h₂⟩ => ⟨h₁.2, h₁.1, h₂⟩, fun ⟨h₁, h₂, h₃⟩ => ⟨⟨h₂, h₁⟩, h₃⟩⟩
+
 set_option linter.deprecated false in
 /-- The `i`-th element of a list coincides with the `i`-th element of any of its prefixes of
 length `> i`. Version designed to rewrite from the small list to the big list. -/
@@ -2272,6 +2277,11 @@ dropping the first `i` elements. Version designed to rewrite from the small list
 theorem get_drop' (L : List α) {i j} :
     get (L.drop i) j = get L ⟨i + j, lt_tsub_iff_left.mp (length_drop i L ▸ j.2)⟩ := by
   rw [get_drop]
+
+theorem mem_drop_iff_get {L : List α} {n : ℕ} {x : α} :
+    x ∈ L.drop n ↔ ∃ k : Fin L.length, n ≤ k ∧ L.get k = x := by
+  simp only [mem_iff_get, get_drop', Fin.exists_iff, le_iff_exists_add, exists_and_left,
+    @eq_comm _ _ (n + _), length_drop, exists_exists_eq_and, lt_tsub_iff_left]
 
 set_option linter.deprecated false in
 /-- The `i + j`-th element of a list coincides with the `j`-th element of the list obtained by
@@ -4052,6 +4062,21 @@ theorem diff_cons (l₁ l₂ : List α) (a : α) : l₁.diff (a :: l₂) = (l₁
   if h : elem a l₁ then by simp only [List.diff, if_pos h]
   else by simp only [List.diff, if_neg h, erase_of_not_mem (mt elem_eq_true_of_mem h)]
 #align list.diff_cons List.diff_cons
+
+@[simp]
+theorem append_diff_cancel_left : ∀ l₁ l₂ l₃ : List α, (l₁ ++ l₂).diff (l₁ ++ l₃) = l₂.diff l₃
+  | [], _, _ => rfl
+  | (a :: l₁), _, _ => by rw [cons_append, cons_append, diff_cons, erase_cons_head,
+    append_diff_cancel_left l₁]
+
+@[simp] theorem append_diff_left (l₁ l₂ : List α) : (l₁ ++ l₂).diff l₁ = l₂ := by
+  simpa only [append_nil] using append_diff_cancel_left l₁ l₂ []
+
+@[simp] theorem diff_self (l : List α) : l.diff l = [] := by
+  simpa only [append_nil] using append_diff_left l []
+
+@[simp] theorem diff_take (l : List α) (n : ℕ) : l.diff (l.take n) = l.drop n := by
+  rw [← append_diff_left (l.take n) (l.drop n), take_append_drop]
 
 theorem diff_cons_right (l₁ l₂ : List α) (a : α) : l₁.diff (a :: l₂) = (l₁.diff l₂).erase a := by
   induction' l₂ with b l₂ ih generalizing l₁ a

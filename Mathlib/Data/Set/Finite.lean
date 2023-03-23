@@ -145,6 +145,10 @@ protected theorem finite_or_infinite (s : Set α) : s.Finite ∨ s.Infinite :=
 
 /-! ### Basic properties of `Set.Finite.toFinset` -/
 
+-- porting note: todo: make it `simp`?
+protected theorem toFinset_toFinite {s : Set α} [Fintype s] (hs : s.Finite) :
+    hs.toFinset = s.toFinset := by
+  rw [Finite.toFinset]; congr; apply Subsingleton.elim
 
 namespace Finite
 
@@ -1013,12 +1017,12 @@ theorem Finite.toFinset_offDiag {s : Set α} [DecidableEq α] (hs : s.Finite) :
 
 theorem Finite.fin_embedding {s : Set α} (h : s.Finite) :
     ∃ (n : ℕ) (f : Fin n ↪ α), range f = s :=
-  ⟨_, (Fintype.equivFin (h.toFinset : Set α)).symm.asEmbedding, by
-    simp only [Finset.coe_sort_coe, Equiv.asEmbedding_range, Finite.coe_toFinset, setOf_mem_eq]⟩
+  let ⟨n, ⟨e⟩⟩ := @Finite.exists_equiv_fin s h.to_subtype
+  ⟨n, e.symm.asEmbedding, Equiv.asEmbedding_range _⟩
 #align set.finite.fin_embedding Set.Finite.fin_embedding
 
 theorem Finite.fin_param {s : Set α} (h : s.Finite) :
-    ∃ (n : ℕ)(f : Fin n → α), Injective f ∧ range f = s :=
+    ∃ (n : ℕ) (f : Fin n → α), Injective f ∧ range f = s :=
   let ⟨n, f, hf⟩ := h.fin_embedding
   ⟨n, f, f.injective, hf⟩
 #align set.finite.fin_param Set.Finite.fin_param
