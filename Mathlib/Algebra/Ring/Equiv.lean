@@ -75,13 +75,13 @@ class RingEquivClass (F : Type _) (R S : outParam (Type _)) [Mul R] [Add R] [Mul
 namespace RingEquivClass
 
 -- See note [lower instance priority]
-instance (priority := 100) toAddEquivClass {_ : Mul R} {_ : Add R}
-    {_ : Mul S} {_ : Add S} [h : RingEquivClass F R S] : AddEquivClass F R S :=
+instance (priority := 100) toAddEquivClass [Mul R] [Add R]
+    [Mul S] [Add S] [h : RingEquivClass F R S] : AddEquivClass F R S :=
   { h with coe := h.coe }
 #align ring_equiv_class.to_add_equiv_class RingEquivClass.toAddEquivClass
 
 -- See note [lower instance priority]
-instance (priority := 100) toRingHomClass {_ : NonAssocSemiring R} {_ : NonAssocSemiring S}
+instance (priority := 100) toRingHomClass [NonAssocSemiring R] [NonAssocSemiring S]
     [h : RingEquivClass F R S] : RingHomClass F R S :=
   { h with
     coe := h.coe
@@ -91,8 +91,8 @@ instance (priority := 100) toRingHomClass {_ : NonAssocSemiring R} {_ : NonAssoc
 #align ring_equiv_class.to_ring_hom_class RingEquivClass.toRingHomClass
 
 -- See note [lower instance priority]
-instance (priority := 100) toNonUnitalRingHomClass {_ : NonUnitalNonAssocSemiring R}
-    {_ : NonUnitalNonAssocSemiring S} [h : RingEquivClass F R S] : NonUnitalRingHomClass F R S :=
+instance (priority := 100) toNonUnitalRingHomClass [NonUnitalNonAssocSemiring R]
+    [NonUnitalNonAssocSemiring S] [h : RingEquivClass F R S] : NonUnitalRingHomClass F R S :=
   { h with
     coe := h.coe
     coe_injective' := FunLike.coe_injective
@@ -132,8 +132,11 @@ instance : RingEquivClass (R ≃+* S) R S where
   left_inv f := f.left_inv
   right_inv f := f.right_inv
 
--- Porting note: `toEquiv_eq_coe` no longer needed in Lean4
-#noalign ring_equiv.to_equiv_eq_coe
+@[simp]
+theorem toEquiv_eq_coe (f : R ≃+* S) : f.toEquiv = f :=
+  rfl
+#align ring_equiv.to_equiv_eq_coe RingEquiv.toEquiv_eq_coe
+
 -- Porting note: `toFun_eq_coe` no longer needed in Lean4
 #noalign ring_equiv.to_fun_eq_coe
 
