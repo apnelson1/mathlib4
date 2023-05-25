@@ -59,7 +59,7 @@ section CoeFnInstance
 -- Porting note: this instance was not the simp-normal form in mathlib3 but it is fine in mathlib4
 -- because coercions get unfolded.
 /-- This instance is here for convenience, but is not the simp-normal form. -/
-instance : CoeFun (GL n R) fun _ => n → n → R where
+instance instCoeFun : CoeFun (GL n R) fun _ => n → n → R where
   coe A := (A : Matrix n n R)
 
 end CoeFnInstance
@@ -75,6 +75,7 @@ def det : GL n R →* Rˣ where
   map_one' := Units.ext det_one
   map_mul' A B := Units.ext <| det_mul _ _
 #align matrix.general_linear_group.det Matrix.GeneralLinearGroup.det
+#align matrix.general_linear_group.coe_det_apply Matrix.GeneralLinearGroup.det_apply_val
 
 /-- The `GL n R` and `general_linear_group R n` groups are multiplicatively equivalent-/
 def toLin : GL n R ≃* LinearMap.GeneralLinearGroup R (n → R) :=
