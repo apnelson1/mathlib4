@@ -8,12 +8,12 @@ Authors: Alex Kontorovich, Heather Macbeth, Marc Masdeu
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathbin.Data.Fintype.Parity
-import Mathbin.LinearAlgebra.Matrix.SpecialLinearGroup
-import Mathbin.Analysis.Complex.Basic
-import Mathbin.GroupTheory.GroupAction.Defs
-import Mathbin.LinearAlgebra.Matrix.GeneralLinearGroup
-import Mathbin.Tactic.LinearCombination
+import Mathlib.Data.Fintype.Parity
+import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
+import Mathlib.Analysis.Complex.Basic
+import Mathlib.GroupTheory.GroupAction.Defs
+import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup
+import Mathlib.Tactic.LinearCombination
 
 /-!
 # The upper half plane and its automorphisms
@@ -134,8 +134,7 @@ theorem ne_zero (z : ℍ) : (z : ℂ) ≠ 0 :=
   mt (congr_arg Complex.im) z.im_ne_zero
 #align upper_half_plane.ne_zero UpperHalfPlane.ne_zero
 
-theorem normSq_pos (z : ℍ) : 0 < Complex.normSq (z : ℂ) :=
-  by
+theorem normSq_pos (z : ℍ) : 0 < Complex.normSq (z : ℂ) := by
   rw [Complex.normSq_pos]
   exact z.ne_zero
 #align upper_half_plane.norm_sq_pos UpperHalfPlane.normSq_pos
@@ -160,11 +159,9 @@ def denom (g : GL(2, ℝ)⁺) (z : ℍ) : ℂ :=
   (↑ₘg 1 0 : ℝ) * z + (↑ₘg 1 1 : ℝ)
 #align upper_half_plane.denom UpperHalfPlane.denom
 
-theorem linear_ne_zero (cd : Fin 2 → ℝ) (z : ℍ) (h : cd ≠ 0) : (cd 0 : ℂ) * z + cd 1 ≠ 0 :=
-  by
+theorem linear_ne_zero (cd : Fin 2 → ℝ) (z : ℍ) (h : cd ≠ 0) : (cd 0 : ℂ) * z + cd 1 ≠ 0 := by
   contrapose! h
-  have : cd 0 = 0 :=
-    by
+  have : cd 0 = 0 := by
     -- we will need this twice
     apply_fun Complex.im  at h
     simpa only [z.im_ne_zero, Complex.add_im, add_zero, coe_im, MulZeroClass.zero_mul, or_false_iff,
@@ -175,8 +172,7 @@ theorem linear_ne_zero (cd : Fin 2 → ℝ) (z : ℍ) (h : cd ≠ 0) : (cd 0 : �
   fin_cases i <;> assumption
 #align upper_half_plane.linear_ne_zero UpperHalfPlane.linear_ne_zero
 
-theorem denom_ne_zero (g : GL(2, ℝ)⁺) (z : ℍ) : denom g z ≠ 0 :=
-  by
+theorem denom_ne_zero (g : GL(2, ℝ)⁺) (z : ℍ) : denom g z ≠ 0 := by
   intro H
   have DET := (mem_GL_pos _).1 g.prop
   have hz := z.prop
@@ -206,8 +202,7 @@ def smulAux' (g : GL(2, ℝ)⁺) (z : ℍ) : ℂ :=
 #align upper_half_plane.smul_aux' UpperHalfPlane.smulAux'
 
 theorem smulAux'_im (g : GL(2, ℝ)⁺) (z : ℍ) :
-    (smulAux' g z).im = det ↑ₘg * z.im / (denom g z).normSq :=
-  by
+    (smulAux' g z).im = det ↑ₘg * z.im / (denom g z).normSq := by
   rw [smul_aux', Complex.div_im]
   set NsqBot := (denom g z).normSq
   have : NsqBot ≠ 0 := by simp only [denom_ne_zero g z, map_eq_zero, Ne.def, not_false_iff]
@@ -227,8 +222,7 @@ def smulAux (g : GL(2, ℝ)⁺) (z : ℍ) : ℍ :=
 #align upper_half_plane.smul_aux UpperHalfPlane.smulAux
 
 theorem denom_cocycle (x y : GL(2, ℝ)⁺) (z : ℍ) :
-    denom (x * y) z = denom x (smulAux y z) * denom y z :=
-  by
+    denom (x * y) z = denom x (smulAux y z) * denom y z := by
   change _ = (_ * (_ / _) + _) * _
   field_simp [denom_ne_zero, -denom, -Num]
   simp only [Matrix.mul, dot_product, Fin.sum_univ_succ, denom, Num, coe_coe, Subgroup.coe_mul,
@@ -237,8 +231,7 @@ theorem denom_cocycle (x y : GL(2, ℝ)⁺) (z : ℍ) :
   ring
 #align upper_half_plane.denom_cocycle UpperHalfPlane.denom_cocycle
 
-theorem mul_smul' (x y : GL(2, ℝ)⁺) (z : ℍ) : smulAux (x * y) z = smulAux x (smulAux y z) :=
-  by
+theorem mul_smul' (x y : GL(2, ℝ)⁺) (z : ℍ) : smulAux (x * y) z = smulAux x (smulAux y z) := by
   ext1
   change _ / _ = (_ * (_ / _) + _) * _
   rw [denom_cocycle]
@@ -347,8 +340,7 @@ theorem im_smul_eq_div_normSq (g : GL(2, ℝ)⁺) (z : ℍ) :
 #align upper_half_plane.im_smul_eq_div_norm_sq UpperHalfPlane.im_smul_eq_div_normSq
 
 @[simp]
-theorem neg_smul (g : GL(2, ℝ)⁺) (z : ℍ) : -g • z = g • z :=
-  by
+theorem neg_smul (g : GL(2, ℝ)⁺) (z : ℍ) : -g • z = g • z := by
   ext1
   change _ / _ = _ / _
   field_simp [denom_ne_zero, -denom, -Num]
@@ -381,8 +373,7 @@ theorem SL_neg_smul (g : SL(2, ℤ)) (z : ℍ) : -g • z = g • z := by
 #align upper_half_plane.SL_neg_smul UpperHalfPlane.SL_neg_smul
 
 theorem c_mul_im_sq_le_normSq_denom (z : ℍ) (g : SL(2, ℝ)) :
-    ((↑ₘg 1 0 : ℝ) * z.im) ^ 2 ≤ Complex.normSq (denom g z) :=
-  by
+    ((↑ₘg 1 0 : ℝ) * z.im) ^ 2 ≤ Complex.normSq (denom g z) := by
   let c := (↑ₘg 1 0 : ℝ)
   let d := (↑ₘg 1 1 : ℝ)
   calc
@@ -407,8 +398,7 @@ end SLModularAction
 
 section PosRealAction
 
-instance posRealAction : MulAction { x : ℝ // 0 < x } ℍ
-    where
+instance posRealAction : MulAction { x : ℝ // 0 < x } ℍ where
   smul x z := mk ((x : ℝ) • z) <| by simpa using mul_pos x.2 z.2
   one_smul z := Subtype.ext <| one_smul _ _
   mul_smul x y z := Subtype.ext <| mul_smul (x : ℝ) y (z : ℂ)
@@ -435,8 +425,7 @@ end PosRealAction
 
 section RealAddAction
 
-instance : AddAction ℝ ℍ
-    where
+instance : AddAction ℝ ℍ where
   vadd x z := mk (x + z) <| by simpa using z.im_pos
   zero_vadd z := Subtype.ext <| by simp
   add_vadd x y z := Subtype.ext <| by simp [add_assoc]
@@ -462,14 +451,12 @@ end RealAddAction
 
 /- these next few lemmas are *not* flagged `@simp` because of the constructors on the RHS;
 instead we use the versions with coercions to `ℂ` as simp lemmas instead. -/
-theorem modular_s_smul (z : ℍ) : ModularGroup.S • z = mk (-z : ℂ)⁻¹ z.im_inv_neg_coe_pos :=
-  by
+theorem modular_s_smul (z : ℍ) : ModularGroup.S • z = mk (-z : ℂ)⁻¹ z.im_inv_neg_coe_pos := by
   rw [special_linear_group_apply]
   simp [ModularGroup.S, neg_div, inv_neg]
 #align upper_half_plane.modular_S_smul UpperHalfPlane.modular_s_smul
 
-theorem modular_t_zpow_smul (z : ℍ) (n : ℤ) : ModularGroup.T ^ n • z = (n : ℝ) +ᵥ z :=
-  by
+theorem modular_t_zpow_smul (z : ℍ) (n : ℤ) : ModularGroup.T ^ n • z = (n : ℝ) +ᵥ z := by
   rw [← Subtype.coe_inj, coe_vadd, add_comm, special_linear_group_apply, coe_mk,
     ModularGroup.coe_T_zpow]
   simp only [of_apply, cons_val_zero, algebraMap.coe_one, Complex.ofReal_one, one_mul, cons_val_one,
@@ -487,8 +474,7 @@ theorem exists_SL2_smul_eq_of_apply_zero_one_eq_zero (g : SL(2, ℝ)) (hc : ↑�
   refine' ⟨⟨_, mul_self_pos.mpr ha⟩, b * a, _⟩
   ext1 ⟨z, hz⟩
   ext1
-  suffices ↑a * z * a + b * a = b * a + a * a * z
-    by
+  suffices ↑a * z * a + b * a = b * a + a * a * z by
     rw [special_linear_group_apply]
     simpa [add_mul]
   ring
@@ -498,8 +484,7 @@ theorem exists_SL2_smul_eq_of_apply_zero_one_ne_zero (g : SL(2, ℝ)) (hc : ↑�
     ∃ (u : { x : ℝ // 0 < x })(v w : ℝ),
       ((· • ·) g : ℍ → ℍ) =
         ((· +ᵥ ·) w : ℍ → ℍ) ∘
-          ((· • ·) ModularGroup.S : ℍ → ℍ) ∘ ((· +ᵥ ·) v : ℍ → ℍ) ∘ ((· • ·) u : ℍ → ℍ) :=
-  by
+          ((· • ·) ModularGroup.S : ℍ → ℍ) ∘ ((· +ᵥ ·) v : ℍ → ℍ) ∘ ((· • ·) u : ℍ → ℍ) := by
   have h_denom := denom_ne_zero g
   induction' g using Matrix.SpecialLinearGroup.fin_two_induction with a b c d h
   replace hc : c ≠ 0
@@ -507,8 +492,7 @@ theorem exists_SL2_smul_eq_of_apply_zero_one_ne_zero (g : SL(2, ℝ)) (hc : ↑�
   refine' ⟨⟨_, mul_self_pos.mpr hc⟩, c * d, a / c, _⟩
   ext1 ⟨z, hz⟩
   ext1
-  suffices (↑a * z + b) / (↑c * z + d) = a / c - (c * d + ↑c * ↑c * z)⁻¹
-    by
+  suffices (↑a * z + b) / (↑c * z + d) = a / c - (c * d + ↑c * ↑c * z)⁻¹ by
     rw [special_linear_group_apply]
     simpa only [inv_neg, modular_S_smul, Subtype.coe_mk, coe_vadd, Complex.ofReal_mul,
       coe_pos_real_smul, Complex.real_smul, Function.comp_apply, Complex.ofReal_div]
@@ -517,8 +501,7 @@ theorem exists_SL2_smul_eq_of_apply_zero_one_ne_zero (g : SL(2, ℝ)) (hc : ↑�
     assumption
   replace h_denom : ↑c * z + d ≠ 0
   · simpa using h_denom ⟨z, hz⟩
-  have h_aux : (c : ℂ) * d + ↑c * ↑c * z ≠ 0 :=
-    by
+  have h_aux : (c : ℂ) * d + ↑c * ↑c * z ≠ 0 := by
     rw [mul_assoc, ← mul_add, add_comm]
     exact mul_ne_zero hc h_denom
   replace h : (a * d - b * c : ℂ) = (1 : ℂ)
