@@ -194,10 +194,9 @@ theorem bernoulli_succ_eval (n p : ℕ) :
 
 theorem bernoulli_eval_one_add (n : ℕ) (x : ℚ) :
     (bernoulli n).eval (1 + x) = (bernoulli n).eval x + n * x ^ (n - 1) := by
-  apply Nat.strong_induction_on n fun d hd => _
-  have nz : ((d.succ : ℕ) : ℚ) ≠ 0 := by
-    norm_cast
-    exact d.succ_ne_zero
+  apply Nat.strongInductionOn n
+  intro d hd
+  have nz : ((d.succ : ℕ) : ℚ) ≠ 0 := by norm_cast
   apply (mul_right_inj' nz).1
   rw [← smul_eq_mul, ← eval_smul, bernoulli_eq_sub_sum, mul_add, ← smul_eq_mul, ← eval_smul,
     bernoulli_eq_sub_sum, eval_sub, eval_finset_sum]
@@ -237,10 +236,10 @@ theorem bernoulli_generating_function (t : A) :
   -- n ≥ 1, the coefficients is a sum to n+2, so use `sum_range_succ` to write as
   -- last term plus sum to n+1
   rw [coeff_succ_X_mul, coeff_rescale, coeff_exp, PowerSeries.coeff_mul,
-    nat.sum_antidiagonal_eq_sum_range_succ_mk, sum_range_succ]
+    Nat.sum_antidiagonal_eq_sum_range_succ_mk, sum_range_succ]
   -- last term is zero so kill with `add_zero`
-  simp only [RingHom.map_sub, tsub_self, constant_coeff_one, constant_coeff_exp,
-    coeff_zero_eq_constant_coeff, MulZeroClass.mul_zero, sub_self, add_zero]
+  simp only [RingHom.map_sub, tsub_self, constantCoeff_one, constantCoeff_exp,
+    coeff_zero_eq_constantCoeff, MulZeroClass.mul_zero, sub_self, add_zero]
   -- Let's multiply both sides by (n+1)! (OK because it's a unit)
   have hnp1 : IsUnit ((n + 1)! : ℚ) := IsUnit.mk0 _ (by exact_mod_cast factorial_ne_zero (n + 1))
   rw [← (hnp1.map (algebraMap ℚ A)).mul_right_inj]
