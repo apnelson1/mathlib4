@@ -184,4 +184,6 @@ theorem left_node_right_eq_self : ∀ {x : Tree Unit} (_hx : x ≠ nil), x.left 
   | node a l r, _ => rfl  -- Porting note: `a △ b` no longer works in pattern matching
 #align tree.left_node_right_eq_self Tree.left_node_right_eq_self
 
+lemma foobar : 1 = 1 := rfl
+
 end Tree
