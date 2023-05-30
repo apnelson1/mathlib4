@@ -33,7 +33,7 @@ mathlib3port_url=$MATHLIB3PORT_BASE_URL/Mathbin/${1#Mathlib/}
 
 # start the port from the latest master
 git fetch
-BASE_COMMIT=$(git rev-parse origin/master)
+BASE_COMMIT=$(git rev-parse Komyyy/MeasureTheory.Measure.Lebesgue.EqHaar)
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -fr "$TMP_DIR"' 0 1 2 13 15
