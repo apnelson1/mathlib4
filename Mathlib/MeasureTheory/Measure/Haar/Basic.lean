@@ -344,7 +344,10 @@ theorem prehaar_sup_le {K₀ : PositiveCompacts G} {U : Set G} (K₁ K₂ : Comp
 theorem prehaar_sup_eq {K₀ : PositiveCompacts G} {U : Set G} {K₁ K₂ : Compacts G}
     (hU : (interior U).Nonempty) (h : Disjoint (K₁.1 * U⁻¹) (K₂.1 * U⁻¹)) :
     prehaar (K₀ : Set G) U (K₁ ⊔ K₂) = prehaar (K₀ : Set G) U K₁ + prehaar (K₀ : Set G) U K₂ := by
-  simp only [prehaar]; rw [div_add_div_same]; congr; exact_mod_cast index_union_eq K₁ K₂ hU h
+  simp only [prehaar]; rw [div_add_div_same]
+  -- Porting note: Here was `congr`, but `to_additive` failed to generate a theorem.
+  refine congr_arg (fun x : ℝ => x / index K₀ U) ?_
+  exact_mod_cast index_union_eq K₁ K₂ hU h
 #align measure_theory.measure.haar.prehaar_sup_eq MeasureTheory.Measure.haar.prehaar_sup_eq
 #align measure_theory.measure.haar.add_prehaar_sup_eq MeasureTheory.Measure.haar.addPrehaar_sup_eq
 
@@ -352,196 +355,203 @@ theorem prehaar_sup_eq {K₀ : PositiveCompacts G} {U : Set G} {K₁ K₂ : Comp
 theorem is_left_invariant_prehaar {K₀ : PositiveCompacts G} {U : Set G} (hU : (interior U).Nonempty)
     (g : G) (K : Compacts G) :
     prehaar (K₀ : Set G) U (K.map _ <| continuous_mul_left g) = prehaar (K₀ : Set G) U K := by
-  simp only [prehaar, compacts.coe_map, is_left_invariant_index K.is_compact _ hU]
+  simp only [prehaar, Compacts.coe_map, is_left_invariant_index K.isCompact _ hU]
 #align measure_theory.measure.haar.is_left_invariant_prehaar MeasureTheory.Measure.haar.is_left_invariant_prehaar
-#align measure_theory.measure.haar.is_left_invariant_add_prehaar MeasureTheory.Measure.haar.is_left_invariant_add_prehaar
+#align measure_theory.measure.haar.is_left_invariant_add_prehaar MeasureTheory.Measure.haar.is_left_invariant_addPrehaar
 
 /-!
-### Lemmas about `haar_product`
+### Lemmas about `haarProduct`
 -/
-
 
 @[to_additive]
 theorem prehaar_mem_haarProduct (K₀ : PositiveCompacts G) {U : Set G} (hU : (interior U).Nonempty) :
-    prehaar (K₀ : Set G) U ∈ haarProduct (K₀ : Set G) := by rintro ⟨K, hK⟩ h2K; rw [mem_Icc];
-  exact ⟨prehaar_nonneg K₀ _, prehaar_le_index K₀ _ hU⟩
+    prehaar (K₀ : Set G) U ∈ haarProduct (K₀ : Set G) := by
+    rintro ⟨K, hK⟩ _; rw [mem_Icc]; exact ⟨prehaar_nonneg K₀ _, prehaar_le_index K₀ _ hU⟩
 #align measure_theory.measure.haar.prehaar_mem_haar_product MeasureTheory.Measure.haar.prehaar_mem_haarProduct
-#align measure_theory.measure.haar.add_prehaar_mem_add_haar_product MeasureTheory.Measure.haar.add_prehaar_mem_add_haarProduct
+#align measure_theory.measure.haar.add_prehaar_mem_add_haar_product MeasureTheory.Measure.haar.addPrehaar_mem_addHaarProduct
 
 @[to_additive]
 theorem nonempty_iInter_clPrehaar (K₀ : PositiveCompacts G) :
     (haarProduct (K₀ : Set G) ∩ ⋂ V : OpenNhdsOf (1 : G), clPrehaar K₀ V).Nonempty := by
-  have : IsCompact (haar_product (K₀ : Set G)) := by apply isCompact_univ_pi; intro K;
-    apply is_compact_Icc
-  refine' this.inter_Inter_nonempty (cl_prehaar K₀) (fun s => isClosed_closure) fun t => _
-  let V₀ := ⋂ V ∈ t, (V : open_nhds_of 1).carrier
-  have h1V₀ : IsOpen V₀ := by apply isOpen_biInter; apply Finset.finite_toSet;
-    rintro ⟨⟨V, hV₁⟩, hV₂⟩ h2V; exact hV₁
-  have h2V₀ : (1 : G) ∈ V₀ := by simp only [mem_Inter]; rintro ⟨⟨V, hV₁⟩, hV₂⟩ h2V; exact hV₂
+  have : IsCompact (haarProduct (K₀ : Set G)) := by
+    apply isCompact_univ_pi; intro K; apply isCompact_Icc
+  refine' this.inter_iInter_nonempty (clPrehaar K₀) (fun s => isClosed_closure) fun t => _
+  let V₀ := ⋂ V ∈ t, (V : OpenNhdsOf (1 : G)).carrier
+  have h1V₀ : IsOpen V₀ := by
+    apply isOpen_biInter; apply Finset.finite_toSet; rintro ⟨⟨V, hV₁⟩, hV₂⟩ _; exact hV₁
+  have h2V₀ : (1 : G) ∈ V₀ := by simp only [mem_iInter]; rintro ⟨⟨V, hV₁⟩, hV₂⟩ _; exact hV₂
   refine' ⟨prehaar K₀ V₀, _⟩
   constructor
-  · apply prehaar_mem_haar_product K₀; use 1; rwa [h1V₀.interior_eq]
-  · simp only [mem_Inter]; rintro ⟨V, hV⟩ h2V; apply subset_closure
-    apply mem_image_of_mem; rw [mem_set_of_eq]
-    exact ⟨subset.trans (Inter_subset _ ⟨V, hV⟩) (Inter_subset _ h2V), h1V₀, h2V₀⟩
+  · apply prehaar_mem_haarProduct K₀; use 1; rwa [h1V₀.interior_eq]
+  · simp only [mem_iInter]; rintro ⟨V, hV⟩ h2V; apply subset_closure
+    apply mem_image_of_mem; rw [mem_setOf_eq]
+    exact ⟨Subset.trans (iInter_subset _ ⟨V, hV⟩) (iInter_subset _ h2V), h1V₀, h2V₀⟩
 #align measure_theory.measure.haar.nonempty_Inter_cl_prehaar MeasureTheory.Measure.haar.nonempty_iInter_clPrehaar
-#align measure_theory.measure.haar.nonempty_Inter_cl_add_prehaar MeasureTheory.Measure.haar.nonempty_iInter_cl_add_prehaar
+#align measure_theory.measure.haar.nonempty_Inter_cl_add_prehaar MeasureTheory.Measure.haar.nonempty_iInter_clAddPrehaar
 
 /-!
 ### Lemmas about `chaar`
 -/
 
 
+-- Porting note: Even in `noncomputable section`, a definition with `to_additive` require
+--               `noncomputable` to generate an additive definition.
+--               TODO Fix this.
+
 /-- This is the "limit" of `prehaar K₀ U K` as `U` becomes a smaller and smaller open
   neighborhood of `(1 : G)`. More precisely, it is defined to be an arbitrary element
-  in the intersection of all the sets `cl_prehaar K₀ V` in `haar_product K₀`.
+  in the intersection of all the sets `clPrehaar K₀ V` in `haarProduct K₀`.
   This is roughly equal to the Haar measure on compact sets,
   but it can differ slightly. We do know that
-  `haar_measure K₀ (interior K) ≤ chaar K₀ K ≤ haar_measure K₀ K`. -/
-@[to_additive add_chaar "additive version of `measure_theory.measure.haar.chaar`"]
-def chaar (K₀ : PositiveCompacts G) (K : Compacts G) : ℝ :=
+  `haarMeasure K₀ (interior K) ≤ chaar K₀ K ≤ haarMeasure K₀ K`. -/
+@[to_additive addCHaar "additive version of `measure_theory.measure.haar.chaar`"]
+noncomputable def chaar (K₀ : PositiveCompacts G) (K : Compacts G) : ℝ :=
   Classical.choose (nonempty_iInter_clPrehaar K₀) K
 #align measure_theory.measure.haar.chaar MeasureTheory.Measure.haar.chaar
-#align measure_theory.measure.haar.add_chaar MeasureTheory.Measure.haar.addChaar
+#align measure_theory.measure.haar.add_chaar MeasureTheory.Measure.haar.addCHaar
 
-@[to_additive add_chaar_mem_add_haar_product]
+@[to_additive addCHaar_mem_addHaarProduct]
 theorem chaar_mem_haarProduct (K₀ : PositiveCompacts G) : chaar K₀ ∈ haarProduct (K₀ : Set G) :=
   (Classical.choose_spec (nonempty_iInter_clPrehaar K₀)).1
 #align measure_theory.measure.haar.chaar_mem_haar_product MeasureTheory.Measure.haar.chaar_mem_haarProduct
-#align measure_theory.measure.haar.add_chaar_mem_add_haar_product MeasureTheory.Measure.haar.add_chaar_mem_add_haarProduct
+#align measure_theory.measure.haar.add_chaar_mem_add_haar_product MeasureTheory.Measure.haar.addCHaar_mem_addHaarProduct
 
-@[to_additive add_chaar_mem_cl_add_prehaar]
+@[to_additive addCHaar_mem_clAddPrehaar]
 theorem chaar_mem_clPrehaar (K₀ : PositiveCompacts G) (V : OpenNhdsOf (1 : G)) :
     chaar K₀ ∈ clPrehaar (K₀ : Set G) V := by
-  have := (Classical.choose_spec (nonempty_Inter_cl_prehaar K₀)).2; rw [mem_Inter] at this
+  have := (Classical.choose_spec (nonempty_iInter_clPrehaar K₀)).2; rw [mem_iInter] at this
   exact this V
 #align measure_theory.measure.haar.chaar_mem_cl_prehaar MeasureTheory.Measure.haar.chaar_mem_clPrehaar
-#align measure_theory.measure.haar.add_chaar_mem_cl_add_prehaar MeasureTheory.Measure.haar.add_chaar_mem_cl_add_prehaar
+#align measure_theory.measure.haar.add_chaar_mem_cl_add_prehaar MeasureTheory.Measure.haar.addCHaar_mem_clAddPrehaar
 
-@[to_additive add_chaar_nonneg]
+@[to_additive addCHaar_nonneg]
 theorem chaar_nonneg (K₀ : PositiveCompacts G) (K : Compacts G) : 0 ≤ chaar K₀ K := by
-  have := chaar_mem_haar_product K₀ K (mem_univ _); rw [mem_Icc] at this; exact this.1
+  have := chaar_mem_haarProduct K₀ K (mem_univ _); rw [mem_Icc] at this; exact this.1
 #align measure_theory.measure.haar.chaar_nonneg MeasureTheory.Measure.haar.chaar_nonneg
-#align measure_theory.measure.haar.add_chaar_nonneg MeasureTheory.Measure.haar.add_chaar_nonneg
+#align measure_theory.measure.haar.add_chaar_nonneg MeasureTheory.Measure.haar.addCHaar_nonneg
 
-@[to_additive add_chaar_empty]
+@[to_additive addCHaar_empty]
 theorem chaar_empty (K₀ : PositiveCompacts G) : chaar K₀ ⊥ = 0 := by
-  let eval : (compacts G → ℝ) → ℝ := fun f => f ⊥
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f ⊥
   have : Continuous eval := continuous_apply ⊥
   show chaar K₀ ∈ eval ⁻¹' {(0 : ℝ)}
-  apply mem_of_subset_of_mem _ (chaar_mem_cl_prehaar K₀ ⊤)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
-  · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩; apply prehaar_empty
-  · apply continuous_iff_is_closed.mp this; exact isClosed_singleton
+  apply mem_of_subset_of_mem _ (chaar_mem_clPrehaar K₀ ⊤)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
+  · rintro _ ⟨U, _, rfl⟩; apply prehaar_empty
+  · apply continuous_iff_isClosed.mp this; exact isClosed_singleton
 #align measure_theory.measure.haar.chaar_empty MeasureTheory.Measure.haar.chaar_empty
-#align measure_theory.measure.haar.add_chaar_empty MeasureTheory.Measure.haar.add_chaar_empty
+#align measure_theory.measure.haar.add_chaar_empty MeasureTheory.Measure.haar.addCHaar_empty
 
-@[to_additive add_chaar_self]
+@[to_additive addCHaar_self]
 theorem chaar_self (K₀ : PositiveCompacts G) : chaar K₀ K₀.toCompacts = 1 := by
-  let eval : (compacts G → ℝ) → ℝ := fun f => f K₀.to_compacts
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f K₀.toCompacts
   have : Continuous eval := continuous_apply _
   show chaar K₀ ∈ eval ⁻¹' {(1 : ℝ)}
-  apply mem_of_subset_of_mem _ (chaar_mem_cl_prehaar K₀ ⊤)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
-  · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩; apply prehaar_self
+  apply mem_of_subset_of_mem _ (chaar_mem_clPrehaar K₀ ⊤)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
+  · rintro _ ⟨U, ⟨_, h2U, h3U⟩, rfl⟩; apply prehaar_self
     rw [h2U.interior_eq]; exact ⟨1, h3U⟩
-  · apply continuous_iff_is_closed.mp this; exact isClosed_singleton
+  · apply continuous_iff_isClosed.mp this; exact isClosed_singleton
 #align measure_theory.measure.haar.chaar_self MeasureTheory.Measure.haar.chaar_self
-#align measure_theory.measure.haar.add_chaar_self MeasureTheory.Measure.haar.add_chaar_self
+#align measure_theory.measure.haar.add_chaar_self MeasureTheory.Measure.haar.addCHaar_self
 
-@[to_additive add_chaar_mono]
+@[to_additive addCHaar_mono]
 theorem chaar_mono {K₀ : PositiveCompacts G} {K₁ K₂ : Compacts G} (h : (K₁ : Set G) ⊆ K₂) :
     chaar K₀ K₁ ≤ chaar K₀ K₂ := by
-  let eval : (compacts G → ℝ) → ℝ := fun f => f K₂ - f K₁
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f K₂ - f K₁
   have : Continuous eval := (continuous_apply K₂).sub (continuous_apply K₁)
   rw [← sub_nonneg]; show chaar K₀ ∈ eval ⁻¹' Ici (0 : ℝ)
-  apply mem_of_subset_of_mem _ (chaar_mem_cl_prehaar K₀ ⊤)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
-  · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩; simp only [mem_preimage, mem_Ici, eval, sub_nonneg]
+  apply mem_of_subset_of_mem _ (chaar_mem_clPrehaar K₀ ⊤)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
+  · rintro _ ⟨U, ⟨_, h2U, h3U⟩, rfl⟩; simp only [mem_preimage, mem_Ici, sub_nonneg]
     apply prehaar_mono _ h; rw [h2U.interior_eq]; exact ⟨1, h3U⟩
-  · apply continuous_iff_is_closed.mp this; exact isClosed_Ici
+  · apply continuous_iff_isClosed.mp this; exact isClosed_Ici
 #align measure_theory.measure.haar.chaar_mono MeasureTheory.Measure.haar.chaar_mono
-#align measure_theory.measure.haar.add_chaar_mono MeasureTheory.Measure.haar.add_chaar_mono
+#align measure_theory.measure.haar.add_chaar_mono MeasureTheory.Measure.haar.addCHaar_mono
 
-@[to_additive add_chaar_sup_le]
+@[to_additive addCHaar_sup_le]
 theorem chaar_sup_le {K₀ : PositiveCompacts G} (K₁ K₂ : Compacts G) :
     chaar K₀ (K₁ ⊔ K₂) ≤ chaar K₀ K₁ + chaar K₀ K₂ := by
-  let eval : (compacts G → ℝ) → ℝ := fun f => f K₁ + f K₂ - f (K₁ ⊔ K₂)
-  have : Continuous eval :=
-    ((@continuous_add ℝ _ _ _).comp ((continuous_apply K₁).prod_mk (continuous_apply K₂))).sub
-      (continuous_apply (K₁ ⊔ K₂))
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f K₁ + f K₂ - f (K₁ ⊔ K₂)
+  have : Continuous eval := by
+    exact ((continuous_apply K₁).add (continuous_apply K₂)).sub (continuous_apply (K₁ ⊔ K₂))
   rw [← sub_nonneg]; show chaar K₀ ∈ eval ⁻¹' Ici (0 : ℝ)
-  apply mem_of_subset_of_mem _ (chaar_mem_cl_prehaar K₀ ⊤)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
-  · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩; simp only [mem_preimage, mem_Ici, eval, sub_nonneg]
+  apply mem_of_subset_of_mem _ (chaar_mem_clPrehaar K₀ ⊤)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
+  · rintro _ ⟨U, ⟨_, h2U, h3U⟩, rfl⟩; simp only [mem_preimage, mem_Ici, sub_nonneg]
     apply prehaar_sup_le; rw [h2U.interior_eq]; exact ⟨1, h3U⟩
-  · apply continuous_iff_is_closed.mp this; exact isClosed_Ici
+  · apply continuous_iff_isClosed.mp this; exact isClosed_Ici
 #align measure_theory.measure.haar.chaar_sup_le MeasureTheory.Measure.haar.chaar_sup_le
-#align measure_theory.measure.haar.add_chaar_sup_le MeasureTheory.Measure.haar.add_chaar_sup_le
+#align measure_theory.measure.haar.add_chaar_sup_le MeasureTheory.Measure.haar.addCHaar_sup_le
 
-@[to_additive add_chaar_sup_eq]
+@[to_additive addCHaar_sup_eq]
 theorem chaar_sup_eq [T2Space G] {K₀ : PositiveCompacts G} {K₁ K₂ : Compacts G}
     (h : Disjoint K₁.1 K₂.1) : chaar K₀ (K₁ ⊔ K₂) = chaar K₀ K₁ + chaar K₀ K₂ := by
   rcases isCompact_isCompact_separated K₁.2 K₂.2 h with ⟨U₁, U₂, h1U₁, h1U₂, h2U₁, h2U₂, hU⟩
   rcases compact_open_separated_mul_right K₁.2 h1U₁ h2U₁ with ⟨L₁, h1L₁, h2L₁⟩
   rcases mem_nhds_iff.mp h1L₁ with ⟨V₁, h1V₁, h2V₁, h3V₁⟩
-  replace h2L₁ := subset.trans (mul_subset_mul_left h1V₁) h2L₁
+  replace h2L₁ := Subset.trans (mul_subset_mul_left h1V₁) h2L₁
   rcases compact_open_separated_mul_right K₂.2 h1U₂ h2U₂ with ⟨L₂, h1L₂, h2L₂⟩
   rcases mem_nhds_iff.mp h1L₂ with ⟨V₂, h1V₂, h2V₂, h3V₂⟩
-  replace h2L₂ := subset.trans (mul_subset_mul_left h1V₂) h2L₂
-  let eval : (compacts G → ℝ) → ℝ := fun f => f K₁ + f K₂ - f (K₁ ⊔ K₂)
+  replace h2L₂ := Subset.trans (mul_subset_mul_left h1V₂) h2L₂
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f K₁ + f K₂ - f (K₁ ⊔ K₂)
   have : Continuous eval :=
-    ((@continuous_add ℝ _ _ _).comp ((continuous_apply K₁).prod_mk (continuous_apply K₂))).sub
-      (continuous_apply (K₁ ⊔ K₂))
+    ((continuous_apply K₁).add (continuous_apply K₂)).sub (continuous_apply (K₁ ⊔ K₂))
   rw [eq_comm, ← sub_eq_zero]; show chaar K₀ ∈ eval ⁻¹' {(0 : ℝ)}
   let V := V₁ ∩ V₂
   apply
     mem_of_subset_of_mem _
-      (chaar_mem_cl_prehaar K₀
-        ⟨⟨V⁻¹, (h2V₁.inter h2V₂).Preimage continuous_inv⟩, by
-          simp only [mem_inv, inv_one, h3V₁, h3V₂, V, mem_inter_iff, true_and_iff]⟩)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
+      (chaar_mem_clPrehaar K₀
+        ⟨⟨V⁻¹, (h2V₁.inter h2V₂).preimage continuous_inv⟩, by
+          simp only [mem_inv, inv_one, h3V₁, h3V₂, mem_inter_iff, true_and_iff]⟩)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
   · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩
-    simp only [mem_preimage, eval, sub_eq_zero, mem_singleton_iff]; rw [eq_comm]
+    simp only [mem_preimage, sub_eq_zero, mem_singleton_iff]; rw [eq_comm]
     apply prehaar_sup_eq
     · rw [h2U.interior_eq]; exact ⟨1, h3U⟩
     · refine' disjoint_of_subset _ _ hU
-      · refine' subset.trans (mul_subset_mul subset.rfl _) h2L₁
-        exact subset.trans (inv_subset.mpr h1U) (inter_subset_left _ _)
-      · refine' subset.trans (mul_subset_mul subset.rfl _) h2L₂
-        exact subset.trans (inv_subset.mpr h1U) (inter_subset_right _ _)
-  · apply continuous_iff_is_closed.mp this; exact isClosed_singleton
+      · refine' Subset.trans (mul_subset_mul Subset.rfl _) h2L₁
+        exact Subset.trans (inv_subset.mpr h1U) (inter_subset_left _ _)
+      · refine' Subset.trans (mul_subset_mul Subset.rfl _) h2L₂
+        exact Subset.trans (inv_subset.mpr h1U) (inter_subset_right _ _)
+  · apply continuous_iff_isClosed.mp this; exact isClosed_singleton
 #align measure_theory.measure.haar.chaar_sup_eq MeasureTheory.Measure.haar.chaar_sup_eq
-#align measure_theory.measure.haar.add_chaar_sup_eq MeasureTheory.Measure.haar.add_chaar_sup_eq
+#align measure_theory.measure.haar.add_chaar_sup_eq MeasureTheory.Measure.haar.addCHaar_sup_eq
 
-@[to_additive is_left_invariant_add_chaar]
+@[to_additive is_left_invariant_addCHaar]
 theorem is_left_invariant_chaar {K₀ : PositiveCompacts G} (g : G) (K : Compacts G) :
     chaar K₀ (K.map _ <| continuous_mul_left g) = chaar K₀ K := by
-  let eval : (compacts G → ℝ) → ℝ := fun f => f (K.map _ <| continuous_mul_left g) - f K
+  let eval : (Compacts G → ℝ) → ℝ := fun f => f (K.map _ <| continuous_mul_left g) - f K
   have : Continuous eval := (continuous_apply (K.map _ _)).sub (continuous_apply K)
   rw [← sub_eq_zero]; show chaar K₀ ∈ eval ⁻¹' {(0 : ℝ)}
-  apply mem_of_subset_of_mem _ (chaar_mem_cl_prehaar K₀ ⊤)
-  unfold cl_prehaar; rw [IsClosed.closure_subset_iff]
-  · rintro _ ⟨U, ⟨h1U, h2U, h3U⟩, rfl⟩
-    simp only [mem_singleton_iff, mem_preimage, eval, sub_eq_zero]
+  apply mem_of_subset_of_mem _ (chaar_mem_clPrehaar K₀ ⊤)
+  unfold clPrehaar; rw [IsClosed.closure_subset_iff]
+  · rintro _ ⟨U, ⟨_, h2U, h3U⟩, rfl⟩
+    simp only [mem_singleton_iff, mem_preimage, sub_eq_zero]
     apply is_left_invariant_prehaar; rw [h2U.interior_eq]; exact ⟨1, h3U⟩
-  · apply continuous_iff_is_closed.mp this; exact isClosed_singleton
+  · apply continuous_iff_isClosed.mp this; exact isClosed_singleton
 #align measure_theory.measure.haar.is_left_invariant_chaar MeasureTheory.Measure.haar.is_left_invariant_chaar
-#align measure_theory.measure.haar.is_left_invariant_add_chaar MeasureTheory.Measure.haar.is_left_invariant_add_chaar
+#align measure_theory.measure.haar.is_left_invariant_add_chaar MeasureTheory.Measure.haar.is_left_invariant_addCHaar
 
 variable [T2Space G]
 
+-- Porting note: Even in `noncomputable section`, a definition with `to_additive` require
+--               `noncomputable` to generate an additive definition.
+--               TODO Fix this.
+
 /-- The function `chaar` interpreted in `ℝ≥0`, as a content -/
 @[to_additive "additive version of `measure_theory.measure.haar.haar_content`"]
-def haarContent (K₀ : PositiveCompacts G) : Content G where
+noncomputable def haarContent (K₀ : PositiveCompacts G) : Content G where
   toFun K := ⟨chaar K₀ K, chaar_nonneg _ _⟩
-  mono' K₁ K₂ h := by simp only [← NNReal.coe_le_coe, Subtype.coe_mk, chaar_mono, h]
+  mono' K₁ K₂ h := by simp only [← NNReal.coe_le_coe, NNReal.toReal, chaar_mono, h]
   sup_disjoint' K₁ K₂ h := by simp only [chaar_sup_eq h]; rfl
-  sup_le' K₁ K₂ := by simp only [← NNReal.coe_le_coe, NNReal.coe_add, Subtype.coe_mk, chaar_sup_le]
+  sup_le' K₁ K₂ := by
+    simp only [← NNReal.coe_le_coe, NNReal.coe_add]
+    simp only [NNReal.toReal, chaar_sup_le]
 #align measure_theory.measure.haar.haar_content MeasureTheory.Measure.haar.haarContent
 #align measure_theory.measure.haar.add_haar_content MeasureTheory.Measure.haar.addHaarContent
 
-/-! We only prove the properties for `haar_content` that we use at least twice below. -/
+/-! We only prove the properties for `haarContent` that we use at least twice below. -/
 
 
 @[to_additive]
@@ -549,37 +559,37 @@ theorem haarContent_apply (K₀ : PositiveCompacts G) (K : Compacts G) :
     haarContent K₀ K = show NNReal from ⟨chaar K₀ K, chaar_nonneg _ _⟩ :=
   rfl
 #align measure_theory.measure.haar.haar_content_apply MeasureTheory.Measure.haar.haarContent_apply
-#align measure_theory.measure.haar.add_haar_content_apply MeasureTheory.Measure.haar.add_haar_content_apply
+#align measure_theory.measure.haar.add_haar_content_apply MeasureTheory.Measure.haar.addHaarContent_apply
 
-/-- The variant of `chaar_self` for `haar_content` -/
-@[to_additive "The variant of `add_chaar_self` for `add_haar_content`."]
+/-- The variant of `chaar_self` for `haarContent` -/
+@[to_additive "The variant of `addCHaar_self` for `addHaarContent`."]
 theorem haarContent_self {K₀ : PositiveCompacts G} : haarContent K₀ K₀.toCompacts = 1 := by
-  simp_rw [← ENNReal.coe_one, haar_content_apply, ENNReal.coe_eq_coe, chaar_self]; rfl
+  simp_rw [← ENNReal.coe_one, haarContent_apply, ENNReal.coe_eq_coe, chaar_self]; rfl
 #align measure_theory.measure.haar.haar_content_self MeasureTheory.Measure.haar.haarContent_self
-#align measure_theory.measure.haar.add_haar_content_self MeasureTheory.Measure.haar.add_haarContent_self
+#align measure_theory.measure.haar.add_haar_content_self MeasureTheory.Measure.haar.addHaarContent_self
 
-/-- The variant of `is_left_invariant_chaar` for `haar_content` -/
-@[to_additive "The variant of `is_left_invariant_add_chaar` for `add_haar_content`"]
+/-- The variant of `is_left_invariant_chaar` for `haarContent` -/
+@[to_additive "The variant of `is_left_invariant_addCHaar` for `addHaarContent`"]
 theorem is_left_invariant_haarContent {K₀ : PositiveCompacts G} (g : G) (K : Compacts G) :
     haarContent K₀ (K.map _ <| continuous_mul_left g) = haarContent K₀ K := by
-  simpa only [ENNReal.coe_eq_coe, ← NNReal.coe_eq, haar_content_apply] using
+  simpa only [ENNReal.coe_eq_coe, ← NNReal.coe_eq, haarContent_apply] using
     is_left_invariant_chaar g K
 #align measure_theory.measure.haar.is_left_invariant_haar_content MeasureTheory.Measure.haar.is_left_invariant_haarContent
-#align measure_theory.measure.haar.is_left_invariant_add_haar_content MeasureTheory.Measure.haar.is_left_invariant_add_haarContent
+#align measure_theory.measure.haar.is_left_invariant_add_haar_content MeasureTheory.Measure.haar.is_left_invariant_addHaarContent
 
 @[to_additive]
 theorem haarContent_outerMeasure_self_pos {K₀ : PositiveCompacts G} :
-    0 < (haarContent K₀).OuterMeasure K₀ := by
+    0 < (haarContent K₀).outerMeasure K₀ := by
   refine' zero_lt_one.trans_le _
-  rw [content.outer_measure_eq_infi]
-  refine' le_iInf₂ fun U hU => le_iInf fun hK₀ => le_trans _ <| le_iSup₂ K₀.to_compacts hK₀
-  exact haar_content_self.ge
+  rw [Content.outerMeasure_eq_iInf]
+  refine' le_iInf₂ fun U hU => le_iInf fun hK₀ => le_trans _ <| le_iSup₂ K₀.toCompacts hK₀
+  exact haarContent_self.ge
 #align measure_theory.measure.haar.haar_content_outer_measure_self_pos MeasureTheory.Measure.haar.haarContent_outerMeasure_self_pos
-#align measure_theory.measure.haar.add_haar_content_outer_measure_self_pos MeasureTheory.Measure.haar.add_haarContent_outerMeasure_self_pos
+#align measure_theory.measure.haar.add_haar_content_outer_measure_self_pos MeasureTheory.Measure.haar.addHaarContent_outerMeasure_self_pos
 
-end Haar
+end haar
 
-open Haar
+open haar
 
 /-!
 ### The Haar measure
@@ -588,52 +598,58 @@ open Haar
 
 variable [TopologicalSpace G] [T2Space G] [TopologicalGroup G] [MeasurableSpace G] [BorelSpace G]
 
-/-- The Haar measure on the locally compact group `G`, scaled so that `haar_measure K₀ K₀ = 1`. -/
+-- Porting note: Even in `noncomputable section`, a definition with `to_additive` require
+--               `noncomputable` to generate an additive definition.
+--               TODO Fix this.
+
+/-- The Haar measure on the locally compact group `G`, scaled so that `haarMeasure K₀ K₀ = 1`. -/
 @[to_additive
-      "The Haar measure on the locally compact additive group `G`,\nscaled so that `add_haar_measure K₀ K₀ = 1`."]
-def haarMeasure (K₀ : PositiveCompacts G) : Measure G :=
-  ((haarContent K₀).OuterMeasure K₀)⁻¹ • (haarContent K₀).Measure
+"The Haar measure on the locally compact additive group `G`, scaled so that
+`addHaarMeasure K₀ K₀ = 1`."]
+noncomputable def haarMeasure (K₀ : PositiveCompacts G) : Measure G :=
+  ((haarContent K₀).outerMeasure K₀)⁻¹ • (haarContent K₀).measure
 #align measure_theory.measure.haar_measure MeasureTheory.Measure.haarMeasure
 #align measure_theory.measure.add_haar_measure MeasureTheory.Measure.addHaarMeasure
 
 @[to_additive]
 theorem haarMeasure_apply {K₀ : PositiveCompacts G} {s : Set G} (hs : MeasurableSet s) :
-    haarMeasure K₀ s = (haarContent K₀).OuterMeasure s / (haarContent K₀).OuterMeasure K₀ := by
-  change ((haar_content K₀).OuterMeasure K₀)⁻¹ * (haar_content K₀).Measure s = _
-  simp only [hs, div_eq_mul_inv, mul_comm, content.measure_apply]
+    haarMeasure K₀ s = (haarContent K₀).outerMeasure s / (haarContent K₀).outerMeasure K₀ := by
+  change ((haarContent K₀).outerMeasure K₀)⁻¹ * (haarContent K₀).measure s = _
+  simp only [hs, div_eq_mul_inv, mul_comm, Content.measure_apply]
 #align measure_theory.measure.haar_measure_apply MeasureTheory.Measure.haarMeasure_apply
-#align measure_theory.measure.add_haar_measure_apply MeasureTheory.Measure.add_haarMeasure_apply
+#align measure_theory.measure.add_haar_measure_apply MeasureTheory.Measure.addHaarMeasure_apply
 
 @[to_additive]
 instance mulLeftInvariant_haarMeasure (K₀ : PositiveCompacts G) :
     MulLeftInvariant (haarMeasure K₀) := by
   rw [← forall_measure_preimage_mul_iff]
   intro g A hA
-  rw [haar_measure_apply hA, haar_measure_apply (measurable_const_mul g hA)]
-  congr 1
-  apply content.is_mul_left_invariant_outer_measure
-  apply is_left_invariant_haar_content
+  rw [haarMeasure_apply hA, haarMeasure_apply (measurable_const_mul g hA)]
+  -- Porting note: Here was `congr 1`, but `to_additive` failed to generate a theorem.
+  refine congr_arg (fun x : ℝ≥0∞ => x / (haarContent K₀).outerMeasure K₀) ?_
+  apply Content.is_mul_left_invariant_outerMeasure
+  apply is_left_invariant_haarContent
 #align measure_theory.measure.is_mul_left_invariant_haar_measure MeasureTheory.Measure.mulLeftInvariant_haarMeasure
 #align measure_theory.measure.is_add_left_invariant_add_haar_measure MeasureTheory.Measure.addLeftInvariant_addHaarMeasure
 
 @[to_additive]
 theorem haarMeasure_self {K₀ : PositiveCompacts G} : haarMeasure K₀ K₀ = 1 := by
-  haveI : LocallyCompactSpace G := K₀.locally_compact_space_of_group
-  rw [haar_measure_apply K₀.is_compact.measurable_set, ENNReal.div_self]
-  · rw [← pos_iff_ne_zero]; exact haar_content_outer_measure_self_pos
-  · exact (content.outer_measure_lt_top_of_is_compact _ K₀.is_compact).Ne
+  haveI : LocallyCompactSpace G := K₀.locallyCompactSpace_of_Group
+  rw [haarMeasure_apply K₀.isCompact.measurableSet, ENNReal.div_self]
+  · rw [← pos_iff_ne_zero]; exact haarContent_outerMeasure_self_pos
+  · exact (Content.outerMeasure_lt_top_of_isCompact _ K₀.isCompact).ne
 #align measure_theory.measure.haar_measure_self MeasureTheory.Measure.haarMeasure_self
-#align measure_theory.measure.add_haar_measure_self MeasureTheory.Measure.add_haarMeasure_self
+#align measure_theory.measure.add_haar_measure_self MeasureTheory.Measure.addHaarMeasure_self
 
 /-- The Haar measure is regular. -/
 @[to_additive "The additive Haar measure is regular."]
-instance regular_haarMeasure {K₀ : PositiveCompacts G} : (haarMeasure K₀).regular := by
-  haveI : LocallyCompactSpace G := K₀.locally_compact_space_of_group
-  apply regular.smul
+instance regular_haarMeasure {K₀ : PositiveCompacts G} : (haarMeasure K₀).Regular := by
+  haveI : LocallyCompactSpace G := K₀.locallyCompactSpace_of_Group
+  apply Regular.smul
   rw [ENNReal.inv_ne_top]
-  exact haar_content_outer_measure_self_pos.ne'
+  exact haarContent_outerMeasure_self_pos.ne'
 #align measure_theory.measure.regular_haar_measure MeasureTheory.Measure.regular_haarMeasure
-#align measure_theory.measure.regular_add_haar_measure MeasureTheory.Measure.regular_add_haarMeasure
+#align measure_theory.measure.regular_add_haar_measure MeasureTheory.Measure.regular_addHaarMeasure
 
 /-- The Haar measure is sigma-finite in a second countable group. -/
 @[to_additive "The additive Haar measure is sigma-finite in a second countable group."]
@@ -781,7 +797,7 @@ theorem div_mem_nhds_one_of_haar_pos (μ : Measure G) [IsHaarMeasure μ] [Locall
   · simp only [div_eq_iff_eq_mul, ← mul_assoc, mul_right_inv, one_mul]
 #align measure_theory.measure.div_mem_nhds_one_of_haar_pos MeasureTheory.Measure.div_mem_nhds_one_of_haar_pos
 #align measure_theory.measure.sub_mem_nhds_zero_of_add_haar_pos MeasureTheory.Measure.sub_mem_nhds_zero_of_add_haar_pos
-
+#exit
 end SecondCountable
 
 end Group
