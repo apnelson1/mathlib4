@@ -8,7 +8,8 @@ def moreServerArgs := #[
 
 -- These settings only apply during `lake build`, but not in VSCode editor.
 def moreLeanArgs := #[
-  "-DwarningAsError=true"
+  "-DwarningAsError=true",
+  "-Dcompiler.enableNew=false"
 ] ++ moreServerArgs
 
 package mathlib where
