@@ -125,7 +125,7 @@ variable [CommRing K]
 
 section Rec
 
-/-! ### Constructing `ratfunc`s and their induction principles -/
+/-! ### Constructing `RatFunc`s and their induction principles -/
 
 theorem ofFractionRing_injective : Function.Injective (ofFractionRing : _ → RatFunc K) :=
   fun _ _ => ofFractionRing.inj
@@ -602,9 +602,10 @@ instance instCommRing : CommRing (RatFunc K) :=
     npow := npowRec }
 #align ratfunc.comm_ring RatFunc.instCommRing
 
+variable {K}
+
 section LiftHom
 
-variable {K}
 variable {G₀ L R S F : Type _} [CommGroupWithZero G₀] [Field L] [CommRing R] [CommRing S]
 
 /-- Lift a monoid homomorphism that maps polynomials `φ : R[X] →* S[X]`
@@ -788,6 +789,8 @@ theorem liftRingHom_injective [Nontrivial R] (φ : R[X] →+* L) (hφ : Function
 
 end LiftHom
 
+variable (K)
+
 instance [IsDomain K] : Field (RatFunc K) :=
   { RatFunc.instCommRing K, RatFunc.instNontrivial K with
     inv := Inv.inv
@@ -800,7 +803,7 @@ instance [IsDomain K] : Field (RatFunc K) :=
 
 section IsFractionRing
 
-/-! ### `ratfunc` as field of fractions of `polynomial` -/
+/-! ### `RatFunc` as field of fractions of `Polynomial` -/
 
 section IsDomain
 
